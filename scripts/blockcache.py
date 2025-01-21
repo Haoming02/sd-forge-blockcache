@@ -9,6 +9,9 @@ from lib_cache.fb_cache import patch as fb_patch
 from lib_cache.tea_cache import patch as t_patch
 
 
+VERSION = "0.1"
+
+
 class BlockCache(scripts.Script):
 
     def title(self):
@@ -18,7 +21,7 @@ class BlockCache(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        with gr.Accordion(label=self.title(), open=False):
+        with gr.Accordion(label=f"{self.title()}v {VERSION}", open=False):
             with gr.Row():
                 enable = gr.Checkbox(False, label="Enable")
                 method = gr.Radio(
