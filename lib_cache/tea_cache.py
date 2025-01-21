@@ -21,26 +21,27 @@ def patch(BlockCache, forward: Callable):
         transformer_options={},
         **kwargs,
     ):
+        skip = False
         assert (y is not None) == (self.num_classes is not None)
 
-        if transformer_options["cond_or_uncond"] == [1, 0]:
-            # both
-            residual = BlockCache.previous_residual
-            previous = BlockCache.previous
-            distance = BlockCache.accumulated_distance
+        thisSigma = transformer_options["sigmas"][0].item()
+        if BlockCache.previousSigma == thisSigma:
+            BlockCache.index += 1
+            if BlockCache.index == len(BlockCache.distance):
+                BlockCache.distance.append(0)
+                BlockCache.residual.append(None)
+                BlockCache.previous.append(None)
+                BlockCache.skipped.append(0)
+        else:
+            BlockCache.previousSigma = thisSigma
+            BlockCache.index = 0
             BlockCache.this_step += 1
-        elif transformer_options["cond_or_uncond"] == [0]:
-            # cond
-            residual = BlockCache.previous_residualP
-            previous = BlockCache.previousP
-            distance = BlockCache.accumulated_distanceP
-            BlockCache.this_step += 0.5
-        elif transformer_options["cond_or_uncond"] == [1]:
-            # uncond
-            residual = BlockCache.previous_residualN
-            previous = BlockCache.previousN
-            distance = BlockCache.accumulated_distanceN
-            BlockCache.this_step += 0.5
+
+        index = BlockCache.index
+        residual = BlockCache.residual[index]
+        previous = BlockCache.previous[index]
+        distance = BlockCache.distance[index]
+        skipped = BlockCache.skipped[index]
 
         transformer_options["original_shape"] = list(x.shape)
         transformer_options["transformer_index"] = 0
@@ -60,24 +61,36 @@ def patch(BlockCache, forward: Callable):
         original_h = h.clone()
 
         if BlockCache.this_step <= BlockCache.nocache_steps:
-            should_calc = True
-        elif BlockCache.this_step + 0.5 >= BlockCache.last_step:
-            should_calc = True
-        elif previous is None or previous.shape != original_h.shape:
-            should_calc = True
+            skip_check = False
+        elif BlockCache.ignore_last and BlockCache.this_step == BlockCache.last_step:
+            skip_check = False
         else:
+            skip_check = True
+
+        if previous is None or previous.shape != original_h.shape:
+            skip_check = False
+        if residual is None:
+            skip_check = False
+        if BlockCache.skip_limit > 0 and skipped >= BlockCache.skip_limit:
+            skip_check = False
+
+        if skip_check:
             distance += (
-                ((original_h - previous).abs().mean() / previous.abs().mean())
+                (
+                    (original_h - BlockCache.previous[index]).abs().mean()
+                    / BlockCache.previous[index].abs().mean()
+                )
                 .cpu()
                 .item()
             )
 
             if distance < BlockCache.threshold:
-                should_calc = False
-            else:
-                should_calc = True
+                skip = True
 
-        if should_calc:
+        if skip:
+            h += residual
+            skipped += 1
+        else:
             for id, module in enumerate(self.input_blocks):
                 transformer_options["block"] = ("input", id)
                 for block_modifier in block_modifiers:
@@ -138,24 +151,12 @@ def patch(BlockCache, forward: Callable):
 
             residual = h - original_h
             distance = 0
-        else:
-            h += residual
+            skipped = 0
 
-        if transformer_options["cond_or_uncond"] == [1, 0]:
-            # both
-            BlockCache.previous_residual = residual
-            BlockCache.previous = original_h
-            BlockCache.accumulated_distance = distance
-        elif transformer_options["cond_or_uncond"] == [0]:
-            # cond
-            BlockCache.previous_residualP = residual
-            BlockCache.previousP = original_h
-            BlockCache.accumulated_distanceP = distance
-        elif transformer_options["cond_or_uncond"] == [1]:
-            # uncond
-            BlockCache.previous_residualN = residual
-            BlockCache.previousN = original_h
-            BlockCache.accumulated_distanceN = distance
+        BlockCache.residual[index] = residual
+        BlockCache.previous[index] = original_h
+        BlockCache.distance[index] = distance
+        BlockCache.skipped[index] = skipped
 
         return h.type(x.dtype)
 
