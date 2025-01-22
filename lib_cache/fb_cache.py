@@ -1,12 +1,15 @@
 from functools import wraps
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import torch
 from ldm_patched.ldm.modules.diffusionmodules.openaimodel import apply_control
 from ldm_patched.ldm.modules.diffusionmodules.util import timestep_embedding
 
+if TYPE_CHECKING:
+    from scripts.blockcache import BlockCache
 
-def patch(BlockCache, forward: Callable):
+
+def patch(cls: "BlockCache", forward: Callable):
     """First Block Cache"""
 
     @wraps(forward)
@@ -26,23 +29,23 @@ def patch(BlockCache, forward: Callable):
         assert (y is not None) == (self.num_classes is not None)
 
         thisSigma = transformer_options["sigmas"][0].item()
-        if BlockCache.previousSigma == thisSigma:
-            BlockCache.index += 1
-            if BlockCache.index == len(BlockCache.distance):
-                BlockCache.distance.append(0)
-                BlockCache.residual.append(None)
-                BlockCache.previous.append(None)
-                BlockCache.skipped.append(0)
+        if cls.previousSigma == thisSigma:
+            cls.index += 1
+            if cls.index == len(cls.distance):
+                cls.distance.append(0)
+                cls.residual.append(None)
+                cls.previous.append(None)
+                cls.skipped.append(0)
         else:
-            BlockCache.previousSigma = thisSigma
-            BlockCache.index = 0
-            BlockCache.this_step += 1
+            cls.previousSigma = thisSigma
+            cls.index = 0
+            cls.this_step += 1
 
-        index = BlockCache.index
-        residual = BlockCache.residual[index]
-        previous = BlockCache.previous[index]
-        distance = BlockCache.distance[index]
-        skipped = BlockCache.skipped[index]
+        index = cls.index
+        residual = cls.residual[index]
+        previous = cls.previous[index]
+        distance = cls.distance[index]
+        skipped = cls.skipped[index]
 
         if transformer_options["cond_or_uncond"] != [1, 0]:
             first_block = False
@@ -84,18 +87,15 @@ def patch(BlockCache, forward: Callable):
 
             if first_block:
                 first_block = False
-                if BlockCache.this_step <= BlockCache.nocache_steps:
+                if cls.this_step <= cls.nocache_steps:
                     skip_check = False
-                elif (
-                    BlockCache.ignore_last
-                    and BlockCache.this_step >= BlockCache.last_step
-                ):
+                elif cls.ignore_last and cls.this_step >= cls.last_step:
                     skip_check = False
                 else:
                     skip_check = True
                 if previous is None or residual is None:
                     skip_check = False
-                if BlockCache.skip_limit > 0 and skipped >= BlockCache.skip_limit:
+                if cls.skip_limit > 0 and skipped >= cls.skip_limit:
                     skip_check = False
 
                 if skip_check:
@@ -105,7 +105,7 @@ def patch(BlockCache, forward: Callable):
                         .item()
                     )
                     previous = h.clone()
-                    if distance < BlockCache.threshold:
+                    if distance < cls.threshold:
                         h = original_h + residual
                         skip = True
                         skipped += 1
@@ -158,10 +158,10 @@ def patch(BlockCache, forward: Callable):
             distance = 0
             skipped = 0
 
-        BlockCache.residual[index] = residual
-        BlockCache.previous[index] = previous
-        BlockCache.distance[index] = distance
-        BlockCache.skipped[index] = skipped
+        cls.residual[index] = residual
+        cls.previous[index] = previous
+        cls.distance[index] = distance
+        cls.skipped[index] = skipped
 
         return h.type(x.dtype)
 

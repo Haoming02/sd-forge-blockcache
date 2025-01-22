@@ -8,11 +8,22 @@ from lib_cache import parse_steps
 from lib_cache.fb_cache import patch as fb_patch
 from lib_cache.tea_cache import patch as t_patch
 
-
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 
 class BlockCache(scripts.Script):
+    index: int
+    this_step: int
+    last_step: int
+    nocache_steps: int
+    threshold: float
+    distance: list[float]
+    residual: list[float]
+    previous: list[float]
+    previousSigma: float
+    skipped: list[int]
+    skip_limit: int
+    ignore_last: bool
 
     def title(self):
         return "Block Cache"
