@@ -3,42 +3,52 @@ This is an Extension for [Forge Classic](https://github.com/Haoming02/sd-webui-f
 
 > For running `Flux` checkpoints on the modern [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), use the [original repo](https://github.com/DenOfEquity/sd-forge-blockcache) instead
 
-<details>
+<details open>
 <summary>Benchmark</summary>
 
-- Generate a `896x1152` image using `SDXL` checkpoint in `24` Steps on a `RTX 3060`
+- Generate a `896x1152` image using `SDXL` checkpoint in `64` Steps with `Euler a` sampler on a `RTX 3060`
 
 <table>
     <tbody align="center">
         <tr>
-            <td>Extension</td>
-            <td>Disabled</td>
-            <td>First Block Cache</td>
-            <td>Tea Cache</td>
+            <td>\</td>
+            <td><b>Disabled</b></td>
+            <td><b>First Block Cache</b></td>
+            <td><b>Tea Cache</b></td>
+            <td><b>Tea Cache</b></td>
         </tr>
         <tr>
-            <td>Cache Start</td>
-            <td>n.a.</td>
+            <td><b>Cache Start</b></td>
+            <td rowspan="3">n.a.</td>
+            <td>0.6</td>
             <td>0.4</td>
-            <td>0.4</td>
+            <td>0.2</td>
         </tr>
         <tr>
-            <td>Cache Threshold</td>
-            <td>n.a.</td>
+            <td><b>Cache Threshold</b></td>
             <td>0.4</td>
-            <td>0.4</td>
+            <td>0.6</td>
+            <td>0.8</td>
         </tr>
         <tr>
-            <td>Result</td>
+            <td><b>Cache Limit</b></td>
+            <td>0</td>
+            <td>0</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td><b>Result</b></td>
             <td><img src="img\off.jpg" width=256></td>
             <td><img src="img\fb.jpg" width=256></td>
             <td><img src="img\tea.jpg" width=256></td>
+            <td><img src="img\tea1.jpg" width=256></td>
         </tr>
         <tr>
-            <td>Time</td>
-            <td>15s</td>
-            <td>12s</td>
-            <td>12s</td>
+            <td><b>Time</b></td>
+            <td>45s</td>
+            <td>35s</td>
+            <td>25s</td>
+            <td>25s</td>
         </tr>
     </tbody>
 </table>
@@ -46,14 +56,15 @@ This is an Extension for [Forge Classic](https://github.com/Haoming02/sd-webui-f
 </details>
 
 > [!IMPORTANT]
-> - This Extension tends to generate noise if the values are set too strong
-> - `Sampling method` also has an impact on the effect of this Extension
+> - This Extension tends to generate noisy patterns when the caches are too strong
+>   - Increasing `Cache Limit` may help with this
+> - Certain `Sampling method` may also lead to the noisy patterns
 > - The speed up is more noticeable the more `Steps` is used
 
 <hr>
 
-## Reference
+## Special Thanks
 
-- https://github.com/ali-vilab/TeaCache
-- https://github.com/chengzeyi/Comfy-WaveSpeed
 - https://github.com/DenOfEquity/sd-forge-blockcache
+- https://github.com/chengzeyi/Comfy-WaveSpeed
+- https://github.com/ali-vilab/TeaCache
