@@ -57,7 +57,7 @@ This is an Extension for [Forge Classic](https://github.com/Haoming02/sd-webui-f
 
 > [!IMPORTANT]
 > - This Extension tends to generate noisy patterns when the caches are too strong
->   - Increasing `Cache Limit` may help with this
+>   - Using `Cache Limit` can help with this
 > - Certain `Sampling method` may also lead to the noisy patterns
 > - The speed up is more noticeable the more `Steps` is used
 

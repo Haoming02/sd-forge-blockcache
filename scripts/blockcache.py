@@ -3,12 +3,15 @@ from typing import Callable
 import gradio as gr
 from ldm_patched.ldm.modules.diffusionmodules.openaimodel import UNetModel
 from modules import scripts
+from modules.script_callbacks import on_ui_settings
+from modules.shared import opts
 
 from lib_cache import parse_steps
 from lib_cache.fb_cache import patch as fb_patch
+from lib_cache.settings import settings
 from lib_cache.tea_cache import patch as t_patch
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 
 class BlockCache(scripts.Script):
@@ -32,6 +35,27 @@ class BlockCache(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
+        always: str = getattr(opts, "bc_always", None)
+        if always:
+            import json
+
+            try:
+                args: list = json.loads(always)
+
+                return [
+                    gr.State(True),
+                    gr.State(str(args[0])),
+                    gr.State(float(args[1])),
+                    gr.State(float(args[2])),
+                    gr.State(bool(args[3])),
+                    gr.State(int(args[4])),
+                ]
+
+            except ValueError:
+                print("Failed to parse Settings")
+            except json.JSONDecodeError:
+                print("Failed to parse JSON")
+
         with gr.Accordion(label=f"{self.title()} v{VERSION}", open=False):
             with gr.Row():
                 with gr.Column():
@@ -46,8 +70,8 @@ class BlockCache(scripts.Script):
                 nocache_ratio = gr.Slider(
                     label="Cache Start",
                     info="caching activation step; lower=faster",
-                    minimum=0.1,
-                    maximum=0.9,
+                    minimum=0.0,
+                    maximum=1.0,
                     value=0.6,
                     step=0.05,
                 )
@@ -155,3 +179,6 @@ class BlockCache(scripts.Script):
             return
 
         UNetModel.forward = self.original_forward
+
+
+on_ui_settings(settings)
