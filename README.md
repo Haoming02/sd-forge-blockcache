@@ -1,7 +1,7 @@
 # SD Forge Block Cache
 This is an Extension for [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic), which implements **First Block Cache** and **Tea Cache**, forked to focus on speeding up `SDXL` checkpoints.
 
-> For running `Flux` checkpoints on the modern [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), use the [original repo](https://github.com/DenOfEquity/sd-forge-blockcache) instead
+> To run `Flux` checkpoints on the new [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), use the [original repo](https://github.com/DenOfEquity/sd-forge-blockcache) instead
 
 <details open>
 <summary>Benchmark</summary>
@@ -56,10 +56,7 @@ This is an Extension for [Forge Classic](https://github.com/Haoming02/sd-webui-f
 </details>
 
 > [!IMPORTANT]
-> - This Extension tends to generate noisy patterns when the caches are too strong
->   - Using `Cache Limit` can help with this
-> - Certain `Sampling method` may also lead to the noisy patterns
-> - The speed up is more noticeable the more `Steps` is used
+> The Extension may result in some noisy patterns to appear on the images, with certain `Sampling method` causing worse effects; though using `Cache Limit` can help mitigate this, and doing another pass *(**eg.** `Hires. fix` or `img2img`)* usually cleans them up as well
 
 <hr>
 

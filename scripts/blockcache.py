@@ -52,9 +52,11 @@ class BlockCache(scripts.Script):
                 ]
 
             except ValueError:
-                print("Failed to parse Settings")
+                if not is_img2img:
+                    print("\n[BlockCache] Failed to parse Always Enabled Settings...\n")
             except json.JSONDecodeError:
-                print("Failed to parse JSON")
+                if not is_img2img:
+                    print("\n[BlockCache] Failed to parse JSON...\n")
 
         with gr.Accordion(label=f"{self.title()} v{VERSION}", open=False):
             with gr.Row():
