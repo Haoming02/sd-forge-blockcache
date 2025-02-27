@@ -11,7 +11,7 @@ from lib_cache.fb_cache import patch as fb_patch
 from lib_cache.settings import settings
 from lib_cache.tea_cache import patch as t_patch
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 
 class BlockCache(scripts.Script):
@@ -27,6 +27,8 @@ class BlockCache(scripts.Script):
     skipped: list[int]
     skip_limit: int
     ignore_last: bool
+
+    logged: bool = False
 
     def title(self):
         return "Block Cache"
@@ -125,6 +127,12 @@ class BlockCache(scripts.Script):
         if not enable:
             return
 
+        if not p.sd_model.is_sdxl:
+            if not BlockCache.logged:
+                BlockCache.logged = True
+                print("\n[BlockCache] Only SDXL is supported...\n")
+            return
+
         self.original_forward: Callable = UNetModel.forward
 
         match method:
@@ -158,7 +166,7 @@ class BlockCache(scripts.Script):
         *args,
         **kwargs,
     ):
-        if not enable:
+        if not enable or getattr(self, "original_forward", None) is None:
             return
 
         total_steps = parse_steps(p)
@@ -177,10 +185,11 @@ class BlockCache(scripts.Script):
         setattr(BlockCache, "ignore_last", ignore_last)
 
     def postprocess(self, p, processed, enable: bool, *args, **kwargs):
-        if not enable:
+        if not enable or getattr(self, "original_forward", None) is None:
             return
 
         UNetModel.forward = self.original_forward
+        delattr(self, "original_forward")
 
 
 on_ui_settings(settings)
