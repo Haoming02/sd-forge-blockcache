@@ -24,6 +24,10 @@ def patch(cls: "BlockCache", forward: Callable):
         transformer_options={},
         **kwargs,
     ):
+
+        if x.size(1) != 4:
+            return forward(self, x, timesteps, context, y, control, transformer_options, **kwargs)
+
         skip = False
         assert (y is not None) == (self.num_classes is not None)
 
