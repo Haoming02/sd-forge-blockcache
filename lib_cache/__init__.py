@@ -1,9 +1,9 @@
-from modules.sd_samplers_common import setup_img2img_steps
 from modules.processing import (
     StableDiffusionProcessing,
     StableDiffusionProcessingImg2Img,
     StableDiffusionProcessingTxt2Img,
 )
+from modules.sd_samplers_common import setup_img2img_steps
 
 
 def parse_steps(p: StableDiffusionProcessing) -> int:

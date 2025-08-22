@@ -2,6 +2,7 @@ from functools import wraps
 from typing import TYPE_CHECKING, Callable
 
 import torch
+
 from ldm_patched.ldm.modules.diffusionmodules.openaimodel import apply_control
 from ldm_patched.ldm.modules.diffusionmodules.util import timestep_embedding
 

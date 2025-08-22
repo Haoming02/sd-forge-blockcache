@@ -1,17 +1,17 @@
 from typing import Callable
 
 import gradio as gr
+from lib_cache import parse_steps, StableDiffusionProcessingTxt2Img
+from lib_cache.fb_cache import patch as fb_patch
+from lib_cache.settings import settings
+from lib_cache.tea_cache import patch as t_patch
+
 from ldm_patched.ldm.modules.diffusionmodules.openaimodel import UNetModel
 from modules import scripts
 from modules.script_callbacks import on_ui_settings
 from modules.shared import opts
 
-from lib_cache import parse_steps
-from lib_cache.fb_cache import patch as fb_patch
-from lib_cache.settings import settings
-from lib_cache.tea_cache import patch as t_patch
-
-VERSION = "0.2.3"
+VERSION = "0.3.0"
 
 
 class BlockCache(scripts.Script):
@@ -156,7 +156,7 @@ class BlockCache(scripts.Script):
 
     def process_before_every_sampling(
         self,
-        p,
+        p: "StableDiffusionProcessingTxt2Img",
         enable: bool,
         method: str,
         nocache_ratio: float,
@@ -167,6 +167,12 @@ class BlockCache(scripts.Script):
         **kwargs,
     ):
         if not enable or getattr(self, "original_forward", None) is None:
+            return
+
+        if getattr(p, "is_hr_pass", False) and not getattr(opts, "bc_hires", False):
+            if hasattr(self, "original_forward"):
+                UNetModel.forward = self.original_forward
+                delattr(self, "original_forward")
             return
 
         total_steps = parse_steps(p)
